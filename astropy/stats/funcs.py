@@ -263,7 +263,8 @@ def binom_conf_interval(k, n, confidence_level=0.68269, interval='wilson'):
 
     if interval == 'wilson' or interval == 'wald':
         from scipy.special import erfinv
-        kappa = np.sqrt(2.) * min(erfinv(confidence_level), 1.e10)  # Avoid overflows.
+        # Avoid overflows.
+        kappa = np.sqrt(2.) * min(erfinv(confidence_level), 1.e10)
         k = k.astype(float)
         n = n.astype(float)
         p = k / n
@@ -484,7 +485,8 @@ def binned_binom_proportion(x, success, bins=10, range=None,
     k = k[valid]
 
     p = k / n
-    bounds = binom_conf_interval(k, n, confidence_level=confidence_level, interval=interval)
+    bounds = binom_conf_interval(
+        k, n, confidence_level=confidence_level, interval=interval)
     perr = np.abs(bounds - p)
 
     return bin_ctr, bin_halfwidth, p, perr
@@ -709,11 +711,13 @@ def poisson_conf_interval(n, interval='root-n', sigma=1, background=0,
         n = np.asanyarray(n)
 
     if interval == 'root-n':
-        _check_poisson_conf_inputs(sigma, background, confidence_level, interval)
+        _check_poisson_conf_inputs(
+            sigma, background, confidence_level, interval)
         conf_interval = np.array([n - np.sqrt(n),
                                   n + np.sqrt(n)])
     elif interval == 'root-n-0':
-        _check_poisson_conf_inputs(sigma, background, confidence_level, interval)
+        _check_poisson_conf_inputs(
+            sigma, background, confidence_level, interval)
         conf_interval = np.array([n - np.sqrt(n),
                                   n + np.sqrt(n)])
         if np.isscalar(n):
@@ -722,11 +726,13 @@ def poisson_conf_interval(n, interval='root-n', sigma=1, background=0,
         else:
             conf_interval[1, n == 0] = 1
     elif interval == 'pearson':
-        _check_poisson_conf_inputs(sigma, background, confidence_level, interval)
+        _check_poisson_conf_inputs(
+            sigma, background, confidence_level, interval)
         conf_interval = np.array([n + 0.5 - np.sqrt(n + 0.25),
                                   n + 0.5 + np.sqrt(n + 0.25)])
     elif interval == 'sherpagehrels':
-        _check_poisson_conf_inputs(sigma, background, confidence_level, interval)
+        _check_poisson_conf_inputs(
+            sigma, background, confidence_level, interval)
         conf_interval = np.array([n - 1 - np.sqrt(n + 0.75),
                                   n + 1 + np.sqrt(n + 0.75)])
     elif interval == 'frequentist-confidence':
@@ -746,7 +752,8 @@ def poisson_conf_interval(n, interval='root-n', sigma=1, background=0,
                              'ignored.)'.format(interval))
         confidence_level = np.asanyarray(confidence_level)
         if np.any(confidence_level <= 0) or np.any(confidence_level >= 1):
-            raise ValueError('confidence_level must be a number between 0 and 1.')
+            raise ValueError(
+                'confidence_level must be a number between 0 and 1.')
         background = np.asanyarray(background)
         if np.any(background < 0):
             raise ValueError('Background must be >= 0.')
@@ -1072,12 +1079,12 @@ def _scipy_kraft_burrows_nousek(N, B, CL):
 
     Parameters
     ----------
-    N : int
+    N : int or np.int32/np.int64
         Total observed count number
-    B : float
+    B : float or np.float32/np.float64
         Background count rate (assumed to be known with negligible error
         from a large background area).
-    CL : float
+    CL : float or np.float32/np.float64
        Confidence level (number between 0 and 1)
 
     Returns
@@ -1157,12 +1164,12 @@ def _mpmath_kraft_burrows_nousek(N, B, CL):
 
     Parameters
     ----------
-    N : int
+    N : int or np.int32/np.int64
         Total observed count number
-    B : float
+    B : float or np.float32/np.float64
         Background count rate (assumed to be known with negligible error
         from a large background area).
-    CL : float
+    CL : float or np.float32/np.float64
        Confidence level (number between 0 and 1)
 
     Returns
@@ -1175,8 +1182,23 @@ def _mpmath_kraft_burrows_nousek(N, B, CL):
     `~astropy.stats.scipy_poisson_upper_limit` for an implementation
     that is based on scipy and evaluates faster, but runs only to about
     N = 100.
+
+    numpy.vectorize uses np.int64 as a parameter instead of python int. 
+    However, mpmath.mpf currently does not work with np.int64, to resolve this,
+    all numpy integer inputs will be converted to their python equivalents
     '''
     from mpmath import mpf, factorial, findroot, fsum, power, exp, quad
+
+    # Are the parameters numpy types? Change them to their default
+    # python equivalencies
+    if type(N).__module__ == np.__name__:
+        N = N.item()
+
+    if type(B).__module__ == np.__name__:
+        B = B.item()
+
+    if type(CL).__module__ == np.__name__:
+        CL = CL.item()
 
     N = mpf(N)
     B = mpf(B)
@@ -1234,12 +1256,12 @@ def _kraft_burrows_nousek(N, B, CL):
 
     Parameters
     ----------
-    N : int
+    N : int or np.int32/np.int64
         Total observed count number
-    B : float
+    B : float or np.float32/np.float64
         Background count rate (assumed to be known with negligible error
         from a large background area).
-    CL : float
+    CL : float or np.float32/np.float64
        Confidence level (number between 0 and 1)
 
     Returns

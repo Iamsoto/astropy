@@ -146,9 +146,11 @@ def test_binom_conf_interval():
     n = 5
     k = [0, 4, 5]
     for conf in [0., 0.5, 1.]:
-        res = funcs.binom_conf_interval(k, n, confidence_level=conf, interval='wilson')
+        res = funcs.binom_conf_interval(
+            k, n, confidence_level=conf, interval='wilson')
         assert ((res >= 0.) & (res <= 1.)).all()
-        res = funcs.binom_conf_interval(k, n, confidence_level=conf, interval='jeffreys')
+        res = funcs.binom_conf_interval(
+            k, n, confidence_level=conf, interval='jeffreys')
         assert ((res >= 0.) & (res <= 1.)).all()
 
     # Test Jeffreys interval accuracy against table in Brown et al. (2001).
@@ -156,7 +158,8 @@ def test_binom_conf_interval():
     k = [0, 1, 2, 3, 4]
     n = 7
     conf = 0.95
-    result = funcs.binom_conf_interval(k, n, confidence_level=conf, interval='jeffreys')
+    result = funcs.binom_conf_interval(
+        k, n, confidence_level=conf, interval='jeffreys')
     table = np.array([[0.000, 0.016, 0.065, 0.139, 0.234],
                       [0.292, 0.501, 0.648, 0.766, 0.861]])
     assert_allclose(result, table, atol=1.e-3, rtol=0.)
@@ -168,7 +171,8 @@ def test_binom_conf_interval():
     assert_allclose(result, table, atol=1.e-3, rtol=0.)
 
     # Test flat
-    result = funcs.binom_conf_interval(k, n, confidence_level=conf, interval='flat')
+    result = funcs.binom_conf_interval(
+        k, n, confidence_level=conf, interval='flat')
     table = np.array([[0., 0.03185, 0.08523, 0.15701, 0.24486],
                       [0.36941, 0.52650, 0.65085, 0.75513, 0.84298]])
     assert_allclose(result, table, atol=1.e-3, rtol=0.)
@@ -405,8 +409,10 @@ def test_mad_std_with_axis_and_nan():
 
     with pytest.warns(RuntimeWarning,
                       match=r'All-NaN slice encountered'):
-        assert_allclose(funcs.mad_std(data, axis=0, ignore_nan=True), result_axis0)
-        assert_allclose(funcs.mad_std(data, axis=1, ignore_nan=True), result_axis1)
+        assert_allclose(funcs.mad_std(
+            data, axis=0, ignore_nan=True), result_axis0)
+        assert_allclose(funcs.mad_std(
+            data, axis=1, ignore_nan=True), result_axis1)
 
 
 def test_mad_std_with_axis_and_nan_array_type():
@@ -594,6 +600,21 @@ def test_scipy_poisson_limit():
     '''
     assert_allclose(funcs._scipy_kraft_burrows_nousek(5., 2.5, .99),
                     (0, 10.67), rtol=1e-3)
+    assert_allclose(funcs._scipy_kraft_burrows_nousek(5, 2.5, .99),
+                    (0, 10.67), rtol=1e-3)
+    assert_allclose(funcs._scipy_kraft_burrows_nousek(np.int32(5.), 2.5, .99),
+                    (0, 10.67), rtol=1e-3)
+    assert_allclose(funcs._scipy_kraft_burrows_nousek(np.int64(5.), 2.5, .99),
+                    (0, 10.67), rtol=1e-3)
+    assert_allclose(funcs._scipy_kraft_burrows_nousek(5., np.float32(2.5), .99),
+                    (0, 10.67), rtol=1e-3)
+    assert_allclose(funcs._scipy_kraft_burrows_nousek(5., np.float64(2.5), .99),
+                    (0, 10.67), rtol=1e-3)
+    assert_allclose(funcs._scipy_kraft_burrows_nousek(5., 2.5, np.float32(.99)),
+                    (0, 10.67), rtol=1e-3)
+    assert_allclose(funcs._scipy_kraft_burrows_nousek(5., 2.5, np.float64(.99)),
+                    (0, 10.67), rtol=1e-3)
+
     conf = funcs.poisson_conf_interval([5., 6.], 'kraft-burrows-nousek',
                                        background=[2.5, 2.],
                                        confidence_level=[.99, .9])
@@ -605,8 +626,26 @@ def test_scipy_poisson_limit():
 def test_mpmath_poisson_limit():
     assert_allclose(funcs._mpmath_kraft_burrows_nousek(6., 2., .9),
                     (0.81, 8.99), rtol=5e-3)
+    assert_allclose(funcs._mpmath_kraft_burrows_nousek(6, 2., .9),
+                    (0.81, 8.99), rtol=5e-3)
+    assert_allclose(funcs._mpmath_kraft_burrows_nousek(np.int32(6), 2., .9),
+                    (0.81, 8.99), rtol=5e-3)
+    assert_allclose(funcs._mpmath_kraft_burrows_nousek(np.int64(6), 2., .9),
+                    (0.81, 8.99), rtol=5e-3)
+    assert_allclose(funcs._mpmath_kraft_burrows_nousek(6., np.float32(2.), .9),
+                    (0.81, 8.99), rtol=5e-3)
+    assert_allclose(funcs._mpmath_kraft_burrows_nousek(6., np.float64(2.), .9),
+                    (0.81, 8.99), rtol=5e-3)
+    assert_allclose(funcs._mpmath_kraft_burrows_nousek(6., 2., np.float32(.9)),
+                    (0.81, 8.99), rtol=5e-3)
+    assert_allclose(funcs._mpmath_kraft_burrows_nousek(6., 2., np.float64(.9)),
+                    (0.81, 8.99), rtol=5e-3)
     assert_allclose(funcs._mpmath_kraft_burrows_nousek(5., 2.5, .99),
                     (0, 10.67), rtol=1e-3)
+
+    assert_allclose(funcs.poisson_conf_interval(
+        n=160, background=154.543,
+        confidence_level=.95, interval='kraft-burrows-nousek')[:, 0], (0, 30.30454909))
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
